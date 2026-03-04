@@ -30,7 +30,7 @@ selfwork-plugin/
 Run Claude Code with this plugin directory:
 
 ```bash
-cc --plugin-dir /Users/royzhu/software/myproject/money/soulmuse/selfwork-plugin
+claude --plugin-dir selfwork-plugin
 ```
 
 ## Notes
