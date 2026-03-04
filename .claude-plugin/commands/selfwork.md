@@ -1,5 +1,5 @@
 ---
-description: 启动或继续 selfwork 任务编排。读取 active run，恢复执行；如无 active run，先澄清需求并初始化新 run。
+description: Start or resume selfwork orchestration. Reads active run to resume execution; if no active run, clarifies requirements and initializes a new run.
 ---
 
-使用 `selfwork` skill 执行启动/恢复流程，并根据当前 run 状态给出下一步动作。
+Use the `selfwork` skill to execute the start/resume flow and determine the next action based on current run state.

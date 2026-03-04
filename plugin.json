@@ -1,7 +1,7 @@
 {
   "name": "selfwork-plugin",
   "version": "0.2.0",
-  "description": "CEO orchestration plugin: main agent dispatches, specialized agents analyze, architect, implement, and review.",
+  "description": "SDD+TDD orchestration plugin: CEO agent dispatches, specialized agents analyze, architect, implement, and review with spec-driven traceability.",
   "author": {
     "name": "royzhu"
   }

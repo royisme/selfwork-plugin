@@ -1,5 +1,5 @@
 ---
-description: 清理 selfwork 历史运行记录。删除已完成历史 run 与孤儿 task-spec，保留当前 active run。
+description: Clean up selfwork run history. Deletes completed historical runs and orphan task-specs, preserves the current active run.
 ---
 
-使用 `selfwork` skill 执行安全清理流程并输出清理结果。
+Use the `selfwork` skill to execute the safe cleanup flow and output the cleanup result.

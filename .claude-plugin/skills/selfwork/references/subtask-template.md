@@ -1,10 +1,10 @@
 # Subtask Specification Template
 
-路径：`.claude/task-specs/<run-id>/subtasks/tN.md`
+Path: `.claude/task-specs/<run-id>/subtasks/tN.md`
 
-## 格式
+## Format
 
-文件头部用 JSON code block 存放结构化合约字段，描述性内容用 markdown。
+Header uses a JSON code block for structured contract fields. Descriptive content uses markdown.
 
 ```
 \`\`\`json
@@ -20,29 +20,29 @@
 
 # tN: <task title>
 
-## 目标
-一句话说明本任务的核心目标。
+## Goal
+One sentence describing the core objective of this task.
 
-## 目标文件
+## Target Files
 - `path/to/file-a.ts`
 - `path/to/file-b.ts`
 
-## 依赖
-- tX（原因）
-- tY（原因）
+## Dependencies
+- tX (reason)
+- tY (reason)
 
-## 实现要点
-- 列出 3-6 条关键实现点
-- 每条应具体到函数/模块级别
+## Implementation Notes
+- 3-6 key implementation points
+- Each should be specific to the function/module level
 
-## 验收标准
-1. 结果行为可验证
-2. 指定 test_command 通过
-3. 无额外范围漂移
+## Acceptance Criteria
+1. Verifiable behavioral outcome
+2. Specified test_command passes
+3. No scope creep
 
-## 完成后
+## On Completion
 
-Developer 必须写入 dev-report JSON 到 `output_artifact` 指定路径：
+Developer must write a dev-report JSON to the `output_artifact` path:
 \`\`\`json
 {
   "run_id": "<run-id>",
@@ -50,6 +50,7 @@ Developer 必须写入 dev-report JSON 到 `output_artifact` 指定路径：
   "files_changed": ["path/to/file.ts"],
   "tests_written": ["path/to/file.test.ts"],
   "test_result": "pass",
-  "notes": "实施备注"
+  "notes": "Implementation notes"
 }
 \`\`\`
+```
