@@ -1,0 +1,8 @@
+{
+  "name": "selfwork-plugin",
+  "version": "0.2.0",
+  "description": "CEO orchestration plugin: main agent dispatches, specialized agents analyze, architect, implement, and review.",
+  "author": {
+    "name": "royzhu"
+  }
+}
