@@ -10,7 +10,7 @@ import { resolve } from "node:path";
  * working (block) or stop.
  *
  * State machine:
- *   planning → analyzing → specifying → executing → completed
+ *   planning → intent_recognition → info_collecting → analyzing → designing → specifying → executing → completed
  *
  * Decision logic:
  *   1. stop_hook_active=true → allow stop (prevent infinite loop)
@@ -55,7 +55,7 @@ interface DispatchState {
   plan?: string;
   spec_path?: string;
   branch?: string;
-  status?: "planning" | "analyzing" | "specifying" | "executing" | "completed" | "blocked";
+  status?: "planning" | "intent_recognition" | "info_collecting" | "analyzing" | "designing" | "specifying" | "executing" | "completed" | "blocked";
   spec_status?: "draft" | "approved" | "obsolete";
   max_retries?: number;
   tasks?: Task[];
@@ -78,7 +78,7 @@ const LOCK_RETRY_DELAY_MS = 25;
 const RUN_ID_PATTERN = /^[A-Za-z0-9._-]+$/;
 
 // Valid status values per CEO orchestration model
-const VALID_STATUSES = ["planning", "analyzing", "specifying", "executing", "completed", "blocked"];
+const VALID_STATUSES = ["planning", "intent_recognition", "info_collecting", "analyzing", "designing", "specifying", "executing", "completed", "blocked"];
 
 function isValidRunId(runId: string): boolean {
   return runId.length > 0 && runId.length <= 128 && RUN_ID_PATTERN.test(runId) && !runId.includes("..");
@@ -163,11 +163,33 @@ function validateStateSchema(state: DispatchState): { ok: boolean; reason?: stri
 function checkArtifacts(runDir: string, state: DispatchState): { ok: boolean; reason?: string } {
   const status = state.status ?? "planning";
 
-  // analyzing phase: require analysis-report.json
+  // intent_recognition phase: check if intent is clear
+  if (status === "intent_recognition") {
+    // Intent recognition always passes - it determines next step
+    return { ok: true };
+  }
+
+  // info_collecting phase: require info-collection.json
+  if (status === "info_collecting") {
+    const infoCollectionPath = resolve(runDir, "artifacts/info-collection.json");
+    if (!existsSync(infoCollectionPath)) {
+      return { ok: false, reason: "Info Collector has not produced info-collection.json yet" };
+    }
+  }
+
+  // analyzing phase: require requirement-analysis.json
   if (status === "analyzing") {
-    const analysisReportPath = resolve(runDir, "artifacts/analysis-report.json");
-    if (!existsSync(analysisReportPath)) {
-      return { ok: false, reason: "Analyst has not produced analysis-report.json yet" };
+    const requirementAnalysisPath = resolve(runDir, "artifacts/requirement-analysis.json");
+    if (!existsSync(requirementAnalysisPath)) {
+      return { ok: false, reason: "Requirement Analyst has not produced requirement-analysis.json yet" };
+    }
+  }
+
+  // designing phase: require product-spec.json
+  if (status === "designing") {
+    const productSpecPath = resolve(runDir, "artifacts/product-spec.json");
+    if (!existsSync(productSpecPath)) {
+      return { ok: false, reason: "Product Designer has not produced product-spec.json yet" };
     }
   }
 
