@@ -105,7 +105,7 @@ Break the spec into implementable tasks:
 **Write to:** `devDocs/spec/selfwork/<topic>.md`
 
 ### Implementation Plan
-**Write to:** `.claude/dispatch/runs/<run-id>/artifacts/plan.json`
+**Write to:** `.claude/selfwork/runs/<run-id>/artifacts/plan.json`
 
 Schema reference: `selfwork-plugin/.claude-plugin/skills/selfwork/references/schemas/plan.schema.json`
 

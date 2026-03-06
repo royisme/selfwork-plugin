@@ -61,7 +61,7 @@ Evaluate requirement clarity:
 
 ## Step 3: Write Output
 
-**Write to:** `.claude/dispatch/runs/<run-id>/artifacts/requirement-analysis.json`
+**Write to:** `.claude/selfwork/runs/<run-id>/artifacts/requirement-analysis.json`
 
 ## Output Format
 

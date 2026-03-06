@@ -24,6 +24,36 @@ user_invocable: false
 - **JSON = Communication Protocol**: The only reliable structured interface between agents
 - **Hook = Enforcer**: Validates state compliance, blocks illegal transitions
 - **CEO never implements**: No code writing, no spec authoring, no test running
+- **Plugin root ≠ runtime root**: `${CLAUDE_PLUGIN_ROOT}` stores plugin assets; `./.claude/selfwork/` stores project runtime state only
+- **Normal execution is automatic**: once a run is approved for execution, dispatchable work must be delegated to subagents without asking the user for permission to continue
+
+## Root Separation
+
+- **Plugin root**: `${CLAUDE_PLUGIN_ROOT}`
+  - read-only source for command definitions, hooks, skills, agents, and helper scripts
+  - never used as the storage location for run state
+- **Runtime root**: `./.claude/selfwork/` inside the current repository
+  - stores `active`, `runs/`, `task-specs/`, `artifacts/`, and archive data
+  - all runtime paths must resolve from the current project root
+
+## Orchestrator Constraints
+
+The main agent must behave as a pure orchestrator:
+- may bootstrap, read state, decide next action, dispatch subagents, and update state
+- must not directly implement task code, run task-level testing, or perform task review work
+- must not consume subtask specs as if it were the assigned developer/reviewer
+- must compute next action from `scripts/dispatch-next.ts` in the current repository before ordinary execution decisions
+- must compute the executable dispatch plan from `scripts/execute-next.ts` before launching subagents
+- must run `scripts/reconcile-state.ts` to consume artifacts and advance run/task state before computing the next action
+- must use `scripts/dispatch-executor.ts` to reserve dispatch work in state before launching subagents
+- must treat a selfwork hook `instruction` payload as the authoritative next-action protocol when present
+- must immediately execute `instruction.action=dispatch_subagent` by launching the required subagent(s)
+- must ask the user only at explicit human gates:
+  - requirement clarification
+  - design confirmation
+  - spec approval
+  - blocked/manual intervention
+- must not ask the user whether to continue ordinary execution after tasks are already decomposed
 
 ## Roles
 
@@ -39,16 +69,18 @@ user_invocable: false
 
 ## Directory Layout
 
-- Dispatch root: `.claude/dispatch/`
-- Active run pointer: `.claude/dispatch/active`
-- Run directory: `.claude/dispatch/runs/<run-id>/`
+- Dispatch root: `.claude/selfwork/`
+- Active run pointer: `.claude/selfwork/active`
+- Run directory: `.claude/selfwork/runs/<run-id>/`
   - `state.json` — Master state file (schema: `references/schemas/run-state.schema.json`)
   - `artifacts/` — Agent output contracts
-    - `analysis-report.json`
+    - `info-collection.json`
+    - `requirement-analysis.json`
+    - `product-spec.json`
     - `plan.json`
     - `dev-report-<task-id>.json`
     - `review-report-<task-id>.json`
-- Task specs: `.claude/task-specs/<run-id>/subtasks/tN.md`
+- Task specs: `.claude/selfwork/task-specs/<run-id>/subtasks/tN.md`
 - Authoritative specs: `devDocs/spec/selfwork/<topic>.md`
 
 ## State Model
@@ -79,9 +111,21 @@ Detailed workflow is in `references/operational-workflow.md`. Summary below.
 
 ### Phase 0: Bootstrap
 
-1. Check `.claude/dispatch/active`
-2. Exists → read `state.json`, resume from breakpoint
-3. Missing → enter Phase 1
+1. Ensure the current repository contains `.claude/selfwork/`
+2. If missing, initialize it with:
+   - `.claude/selfwork/runs/`
+   - `.claude/selfwork/task-specs/`
+   - `.claude/selfwork/archive/`
+3. Check `.claude/selfwork/active`
+4. Exists → read `state.json`, resume from breakpoint
+5. Missing → bootstrap must create the first run, including:
+   - `.claude/selfwork/runs/<run-id>/state.json`
+   - `.claude/selfwork/runs/<run-id>/artifacts/`
+   - `.claude/selfwork/task-specs/<run-id>/subtasks/`
+   - `.claude/selfwork/active`
+6. Enter Phase 1 with the newly created run
+
+Bootstrap helper script: `scripts/bootstrap.ts`
 
 ### Phase 1: Planning (status=planning)
 
@@ -98,39 +142,56 @@ Detailed workflow is in `references/operational-workflow.md`. Summary below.
 
 ### Phase 3: Info Collecting (status=info_collecting)
 
-1. Dispatch Info Collector agent
-2. Read `info-collection.json`
-3. Assess research completeness
-4. Pass to Requirement Analyst
+1. Run `reconcile-state.ts`
+2. Run `dispatch-next.ts` and `execute-next.ts`
+3. Run `dispatch-executor.ts` to reserve dispatch state
+4. Launch Info Collector agent immediately
+5. After the agent returns, run `reconcile-state.ts` again and pass control to Requirement Analyst if the artifact is complete
 
 ### Phase 4: Analysis (status=analyzing)
 
-1. Dispatch Requirement Analyst agent
-2. Read `requirement-analysis.json`
-3. Assess requirement clarity
-4. If `clarity=unclear` → ask user clarifying questions, re-dispatch
-5. If `clarity=clear|partial` → proceed to design
+1. Run `reconcile-state.ts`
+2. Run `dispatch-next.ts` and `execute-next.ts`
+3. Run `dispatch-executor.ts` to reserve dispatch state
+4. Launch Requirement Analyst agent immediately
+5. After the agent returns, run `reconcile-state.ts`
+6. If `clarity=unclear` → ask user clarifying questions, re-dispatch
+7. If `clarity=clear|partial` → proceed to design
 
 ### Phase 5: Design (status=designing)
 
-1. Dispatch Product Designer agent
-2. Read product-spec.md and product-spec.json
-3. Present design summary to user
-4. **Gate**: User confirms design to proceed
+1. Run `reconcile-state.ts`
+2. Run `dispatch-next.ts` and `execute-next.ts`
+3. Run `dispatch-executor.ts` to reserve dispatch state
+4. Launch Product Designer agent immediately
+5. Read product-spec.md and product-spec.json
+6. Present design summary to user
+7. **Gate**: User confirms design to proceed
 
 ### Phase 6: Specification (status=specifying)
 
-1. Dispatch Architect agent (if not already done in clear-requirement path)
-2. Architect outputs technical spec file + `plan.json`
-3. Present spec summary to user for confirmation
-4. **Gate**: `spec_status` must be `approved` to proceed
+1. Run `reconcile-state.ts`
+2. Run `dispatch-next.ts` and `execute-next.ts`
+3. If the next action is dispatchable architect work, run `dispatch-executor.ts` to reserve dispatch state
+4. Launch Architect agent immediately
+5. Architect outputs technical spec file + `plan.json`
+6. Re-run `reconcile-state.ts` and present spec summary to user for confirmation
+7. **Gate**: `spec_status` must be `approved` to proceed
 
 ### Phase 7: Execution (status=executing)
 
 1. Generate subtask specs from `plan.json` (see `references/subtask-template.md`)
-2. Dispatch Developer agents by complexity
-3. On completion, dispatch Reviewer for each task
-4. Handle verdicts: approved → complete, changes_requested → retry, blocked → fail
+2. Run `reconcile-state.ts` before every dispatch decision
+3. Run `dispatch-next.ts` and `execute-next.ts`
+4. Run `dispatch-executor.ts` to reserve dispatch state before any launch
+5. Dispatch Developer agents by complexity using the execution plan jobs
+6. On completion, re-run `reconcile-state.ts`, then dispatch Reviewer for each `agent_done` task
+7. Handle verdicts automatically through review artifacts: approved → complete, changes_requested → retry, blocked → fail
+8. Automatic progression rules:
+   - dispatchable pending task → dispatch immediately to the correct developer subagent
+   - `agent_done` task → dispatch reviewer immediately
+   - retryable failed task → re-dispatch automatically with failure context
+9. Do not ask the user whether to continue normal task execution in this phase
 
 ### Phase 8: Completion (status=completed)
 

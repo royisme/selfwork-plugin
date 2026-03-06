@@ -1,6 +1,6 @@
 # Subtask Specification Template
 
-Path: `.claude/task-specs/<run-id>/subtasks/tN.md`
+Path: `.claude/selfwork/task-specs/<run-id>/subtasks/tN.md`
 
 ## Format
 
@@ -14,7 +14,7 @@ Header uses a JSON code block for structured contract fields. Descriptive conten
   "criticality": "critical",
   "test_command": "bun run test:run src/xxx.test.ts",
   "spec_source": "devDocs/spec/selfwork/xxx.md#section",
-  "output_artifact": ".claude/dispatch/runs/<run-id>/artifacts/dev-report-t1.json"
+  "output_artifact": ".claude/selfwork/runs/<run-id>/artifacts/dev-report-t1.json"
 }
 \`\`\`
 
@@ -39,6 +39,12 @@ One sentence describing the core objective of this task.
 1. Verifiable behavioral outcome
 2. Specified test_command passes
 3. No scope creep
+
+## Execution Contract
+
+- This subtask spec is consumed by a dispatched subagent only.
+- The CEO/main agent may generate and dispatch this spec, but must not execute its implementation steps directly.
+- Runtime files referenced here are always under the current repository's `.claude/selfwork/` tree, not `${CLAUDE_PLUGIN_ROOT}`.
 
 ## On Completion
 

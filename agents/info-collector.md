@@ -55,7 +55,7 @@ Structure your research into organized notes that the requirement analyst can us
 
 ## Step 4: Write Output
 
-**Write to:** `.claude/dispatch/runs/<run-id>/artifacts/info-collection.json`
+**Write to:** `.claude/selfwork/runs/<run-id>/artifacts/info-collection.json`
 
 ## Output Format
 

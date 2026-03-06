@@ -11,7 +11,7 @@ tools: Read, Write, Edit, Glob, Grep, Bash
 
 ## 任务执行流程
 
-1. **读取任务规范**: 根据传入的 `spec` 参数，读取 `.claude/task-specs/<run-id>/subtasks/<task-id>.md`
+1. **读取任务规范**: 根据传入的 `spec` 参数，读取 `.claude/selfwork/task-specs/<run-id>/subtasks/<task-id>.md`
 2. **理解需求**: 仔细阅读规范，理解目标
 3. **实现**: 按照规范实现功能
 4. **验证**: 运行 `pnpm run test` 确保测试通过
@@ -28,7 +28,7 @@ tools: Read, Write, Edit, Glob, Grep, Bash
 你将收到以下格式的任务：
 ```
 任务 ID: t1
-规范文件: .claude/task-specs/<run-id>/subtasks/t1.md
+规范文件: .claude/selfwork/task-specs/<run-id>/subtasks/t1.md
 ```
 
 请读取对应的规范文件获取完整上下文。

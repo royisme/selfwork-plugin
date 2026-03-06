@@ -72,7 +72,7 @@ Create a comprehensive Product Requirements Document covering:
 **Write to:** `devDocs/spec/selfwork/<topic>.md`
 
 ### Structured Product Spec
-**Write to:** `.claude/dispatch/runs/<run-id>/artifacts/product-spec.json`
+**Write to:** `.claude/selfwork/runs/<run-id>/artifacts/product-spec.json`
 
 ## Output Format
 
